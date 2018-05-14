@@ -80,7 +80,7 @@ to change their settings after consent dialog has been dismissed. For this to wo
   <script type="application/json">{
     "consents": {
       "consent1": {
-        "checkConsentHref": "/samples_templates/consent/getConsent",
+        "checkConsentHref": "http://localhost:3000/consent",
         "promptUI": "consentDialog"
       }
     },
@@ -92,6 +92,7 @@ to change their settings after consent dialog has been dismissed. For this to wo
       <div class="h2 m1">Headline</div>
       <p class="m1">This is an important message requiring you to make a choice.</p>
       <p class="m1">This is some more information about this choice. Here's a list of items related to this choice.</p>
+
       <amp-list width="auto"
                 height="132"
                 layout="fixed-height"
@@ -101,10 +102,12 @@ to change their settings after consent dialog has been dismissed. For this to wo
           <li>{{.}}</li>
         </template>
       </amp-list>
+
       <button on="tap:myUserConsent.accept" class="ampstart-btn ampstart-btn-secondary caps mx1">Accept</button>
       <button on="tap:myUserConsent.reject" class="ampstart-btn ampstart-btn-secondary caps">Reject</button>
     </div>
   </div>
+
   <div id="post-consent-ui">
     <button on="tap:myUserConsent.prompt()" class="ampstart-btn caps m1">Update Consent</button>
   </div>
