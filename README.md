@@ -1,30 +1,11 @@
-# AMP consent sandbox
+# Sandbox testing for amp-consent and amp-geo
 
-```json
+A simple sandbox server application providing test endpoints for `amp-consent` and `amp-rtc`.  
 
-<amp-geo layout="nodisplay"><script type="application/json">
-  {
-    "ISOCountryGroups": {
-      "eu_users": [
-        "fr",
-        "gb",
-        "is",
-      ]
-    }
-  }
-</script>
-</amp-geo>
-
-<amp-consent id="gdprConsent" layout="nodisplay">
-  <script type="application/json">
-    {
-      "consents": {
-        "gdpr_consent": {
-          "promptIfUnknownForGeoGroup": "eu_user",   /* simple misconfig, consent flow defaults to not showing */
-        }
-      }
-    }
-  </script>
-</amp-consent>
-
+To run:
 ```
+> npm install
+> npm start
+```
+
+Navigate to http://localhost:3000/basic_flow.html. See public folder for examples. 
