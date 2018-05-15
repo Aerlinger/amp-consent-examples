@@ -7,18 +7,20 @@
   to give publishers and tech vendors tools to implement their preferred user controls and to support their varied
   individual compliance requirements on their AMP pages.
 
-  This page demonstrates how a basic blocking consent flow can be built, which would just show a
-  simple blocking popup with an accept and reject button. On reject some content in the page will be blocked.
+  This page demonstrates how a more advanced blocking consent flow can be built.
+  It will show accept and reject buttons, which on click will reveal more information,
+  like a list of used 3rd parties on user acceptance, or a general data usage notice
+  on user rejection.
 -->
 <!-- -->
 <!doctype html>
 <html ⚡>
 <head>
   <meta charset="utf-8">
-  <link rel="canonical" href="/user_consent/basic_user_consent_flow/">
+  <link rel="canonical" href="/user_consent/advanced_user_consent_flow/">
   <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
   <script async src="https://cdn.ampproject.org/v0.js"></script>
-  <title>Basic User Consent Flow</title>
+  <title>Advanced User Consent Flow</title>
   <!-- ## Setup -->
   <!-- Import the consent component in the header. -->
   <script async custom-element="amp-consent" src="https://cdn.ampproject.org/v0/amp-consent-0.1.js"></script>
@@ -27,23 +29,32 @@
   <script async custom-template="amp-mustache" src="https://cdn.ampproject.org/v0/amp-mustache-0.1.js"></script>
   <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
   <style amp-custom>
-
-
-    .consentPopup {
-      padding: 20px;
-      margin: 0 auto;
-      background: #fff;
-      border-radius: 5px;
-      position: relative;
-      max-width: 700px;
-    }
-
-    .popupOverlay {
+    .lightbox {
       height: 100vh;
       width: 100vw;
       background: rgba(0, 0, 0, 0.7);
+      padding: 5% 0;
     }
-
+    .lightbox-content {
+      margin: 0 auto;
+      padding: 1rem;
+      background: #fff;
+      border-radius: 5px;
+      max-width: 700px;
+      width: 95%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .message > * {
+      min-width: 200px;
+    }
     .dismiss-button {
       position: absolute;
       right: 24px;
@@ -54,31 +65,30 @@
 </head>
 <body>
 
-<!-- ## Important
-
+<!-- ## Important -->
+<!--
 The consent is saved to localstorage - after accepting/rejecting it once you will
 only get the popup dialog again after deleting the localstorage content for this host,
 for example via <a href="https://developers.google.com/web/tools/chrome-devtools/manage-data/local-storage#local-storage">
 Chrome Dev Tools</a>.
+-->
 
-## Basic Usage
-
+<!-- ## Basic Usage -->
+<!--
 The `amp-consent` component allows to specify the required user consent for this page.
 A CORS endpoints can be specified via the `checkConsentHref`
-attribute. The `amp-consent` component will check via a POST request if the
-consent UI needs to be shown. The response should look like this:
-
+attribute. This endpoint will be queried via a POST request to determine if the
+consent UI specified for it needs to be shown. The response should look like this:
 ```json
 {
-  "promptIfUnknown": boolean (true/false)
+  'promptIfUnknown': boolean (true/false)
 }
 ```
-
-It is possible, to re-trigger the consent dialog using the `myConsent.prompt()` action. One use case for this is giving users the option
-to change their settings after consent dialog has been dismissed. For this to work, the post consent UI needs to be specified in the
-`amp-consent` JSON config: `"promptUI": "consentDialog"`.
+The response will indicate if the consent needs to be shown or not.
+If it needs to be shown, the element with the id given in `promptUI` will be displayed.
 -->
-<amp-consent id="myUserConsent" layout="nodisplay">
+<amp-consent id="myConsent" layout="nodisplay">
+
   <script type="application/json">{
     "consents": {
       "consent1": {
@@ -89,58 +99,63 @@ to change their settings after consent dialog has been dismissed. For this to wo
     "postPromptUI": "post-consent-ui"
   }</script>
 
-  <div class="popupOverlay" id="consentDialog">
-    <div class="consentPopup">
-
-      <div class="dismiss-button" role="button" tabindex="0" on="tap:myUserConsent.dismiss">X</div>
-
-      <div class="h2 m1">Headline</div>
-      <p class="m1">This is an important message requiring you to make a choice.</p>
-      <p class="m1">This is some more information about this choice. Here's a list of items related to this choice.</p>
-
-      <amp-list width="auto"
-                height="132"
-                layout="fixed-height"
-                src="/json/consent-items.json"
-                class="m1">
-        <template type="amp-mustache">
-          <li>{{.}}</li>
-        </template>
-      </amp-list>
-
-      <button on="tap:myUserConsent.accept" class="ampstart-btn ampstart-btn-secondary caps mx1">Accept</button>
-      <button on="tap:myUserConsent.reject" class="ampstart-btn ampstart-btn-secondary caps">Reject</button>
+  <div class="lightbox" id="consentDialog">
+    <div class="lightbox-content">
+      <div class="dismiss-button" role="button" tabindex="0" on="tap:myConsent.dismiss">X</div>
+      <div class="message">
+        <div class="h2 m1">Headline</div>
+        <p class="m1">This is an important message requiring you to make a choice.</p>
+      </div>
+      <div id="choice">
+        <button class="ampstart-btn ampstart-btn-secondary caps mx1" on="tap:choice1.show,choice2.hide">Choice 1</button>
+        <button class="ampstart-btn ampstart-btn-secondary caps" on="tap:choice2.show,choice1.hide">Choice 2</button>
+      </div>
+      <div id="choice1" hidden class="message">
+        <p class="m1">This is some more information about this choice. Here's a list of items related to this choice.</p>
+        <amp-list width="auto"
+                  height="132"
+                  layout="fixed-height"
+                  src="/json/consent-items.json"
+                  class="m1">
+          <template type="amp-mustache">
+            <li>{{.}}</li>
+          </template>
+        </amp-list>
+        <button on="tap:myConsent.accept" class="ampstart-btn ampstart-btn-secondary caps m1">Confirm</button>
+      </div>
+      <div id="choice2" hidden class="message">
+        <p class="m1">This is some more information about this choice.</p>
+        <button on="tap:myConsent.reject" class="ampstart-btn ampstart-btn-secondary caps m1">Confirm</button>
+      </div>
     </div>
   </div>
 
   <div id="post-consent-ui">
-    <button on="tap:myUserConsent.prompt()" class="ampstart-btn caps m1">Update Consent</button>
+    <button on="tap:myConsent.prompt()" class="ampstart-btn caps m1">Update Consent</button>
   </div>
 </amp-consent>
 
 <!--
-  Use `data-block-on-consent` attribute to block AMP components until consent is given.
-  Individual AMP components can override  blocking behavior and implement blocking logic themselves.
+Use `data-block-on-consent` attribute to block AMP components until consent is given.
+Individual AMP components can override  blocking behavior and implement blocking logic themselves.
 
-  Here is an image which is blocked until consent is given:
+Here is an image which is blocked until consent is given:
 -->
 <amp-img data-block-on-consent src="/img/landscape_lake_300x201.jpg" width="300" height="201">
 </amp-img>
 
 <!--
-  This ad will also be blocked until consent is given:
+This ad will also be blocked until consent is given:
 -->
-<amp-ad data-block-on-consent
-        data-slot="/30497360/a4a/a4a_native"
-        width="300"
+<amp-ad data-block-on-consent data-slot="/30497360/a4a/a4a_native"
         height="250"
         type="doubleclick"
+        width="300"
         rtc-config='{
-          "urls": ["http://localhost:3000/rtc"]
+          http://localhost:3000/rtc
         }'
-        >
+>
 </amp-ad>
-
 
 </body>
 </html>
